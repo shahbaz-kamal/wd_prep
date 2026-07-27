@@ -4,6 +4,8 @@
 
 Object-Oriented Programming organizes code around **objects** — bundles of data (attributes/state) and behavior (methods) — instead of a sequence of functions acting on separate data (procedural style). Goal: model real-world entities directly, keep related data and logic together, and make code modular, reusable, and easier to reason about as it grows.
 
+**Why not just a struct?** A struct/record can hold multiple fields of different types (`int`, `string`, `double`, ...), but it **cannot define functions on itself**. E.g. in a chess struct you can't give a knight piece its own `move()` — the behavior has to live somewhere else, disconnected from the data. OOP fixes this by letting a class own both the data and the functions that act on it.
+
 ## Class vs Object
 
 - **Class** — blueprint. Defines what data and methods instances will have. Costs no memory until instantiated.
@@ -52,6 +54,12 @@ class Employee {
 }
 ```
 
+Getter/setter naming: **getting methods** retrieve information (`getSalary()`), **setting methods** change it (`setSalary()`). Two things fall out of this:
+- **Read-only attribute** — define a getter but skip the setter, and the attribute can only be read from outside, never changed.
+- **Keeping dependent attributes in sync** — a setter can update more than one field at once (e.g. `setSalary()` also recalculating `tax`), which raw field access could never do consistently.
+
+**Information hiding** — the broader reason encapsulation matters: don't let external classes reach in and edit an object's attributes directly, especially in large programs. Each piece of code should work through methods, not rely on another class's internals — that's what keeps a big codebase from turning into a tangle where every change breaks something unrelated.
+
 ### Abstraction
 Hiding implementation details, exposing only the essential operations. Real-world analogy: an ATM or coffee machine — you press a button, you don't see the internal circuitry. Achieved via abstract classes / interfaces.
 
@@ -73,8 +81,14 @@ class CardPayment extends PaymentMethod {
 }
 ```
 
+**Interface vs implementation** — the *interface* is how classes talk to each other (the methods each one exposes); the *implementation* is how those methods are actually coded, and it should stay hidden. A chess `King` and `Knight` have completely different internal move logic, but both expose a `move()` method — same interface shape, different implementation underneath.
+
+Why it matters: if classes reach into each other's internals directly, they get entangled — one change ripples outward and breaks things far away. An interface is a fixed point of contact between classes, so each side can be developed and changed independently as long as the interface itself doesn't change.
+
 ### Inheritance
-One class (child/derived) acquires the properties and methods of another (parent/base) — an "is-a" relationship. Enables code reuse and method overriding. Real-world analogy: `Animal` is the base class; `Dog`, `Cat`, `Cow` are derived classes that inherit shared behavior and override what differs.
+One class (child/derived, a.k.a. **subclass**) acquires the properties and methods of another (parent/base, a.k.a. **superclass**) — an "is-a" relationship. Enables code reuse and method overriding. Real-world analogy: `Animal` is the base class; `Dog`, `Cat`, `Cow` are derived classes that inherit shared behavior and override what differs.
+
+A hierarchy isn't limited to one level — it's common to see several layers stacked (e.g. `Item` → `Weapon`/`Tool` → `Sword`/`Club` → more specific subtypes), forming a whole web of superclass/subclass relationships, not just a single parent-child pair.
 
 ```js
 class Animal {
@@ -94,6 +108,16 @@ class Dog extends Animal {
 }
 ```
 
+**Access modifiers** — control which classes can reach a given member:
+
+| Modifier | Accessible from |
+|---|---|
+| Public | anywhere in the program |
+| Protected | the defining class + its subclasses |
+| Private | only the defining class itself |
+
+Example on a `Food` → `Fruit`/`Vegetables` → `Apple`/`Orange`/`Broccoli` hierarchy: a **public** member on `Food` is visible everywhere, including `Apple`. A **private** member on `Fruit` is visible only inside `Fruit` — not from `Food`, not from `Apple`. A **protected** member on `Fruit` is visible from `Fruit` and from `Apple`/`Orange` (its subclasses), just not from unrelated branches like `Broccoli`.
+
 ### Polymorphism
 "Many forms" — the same method/interface produces different behavior depending on the object invoking it. Two flavors: compile-time (overloading) and runtime (overriding). Real-world analogy: calling `speak()` on different animals — `Dog` barks, `Cat` meows, `Cow` moos — same call, different result per object.
 
@@ -107,6 +131,30 @@ Animal[] animals = { new Dog(), new Cat(), new Cow() };
 for (Animal a : animals) System.out.println(a.speak());
 // Bark, Meow, Moo — dynamic dispatch
 ```
+
+(Same idea, classic car flavor: `Car.drive()` and a `sportsCar extends Car` that overrides `drive()` — calling `.drive()` on a `Car` instance runs `Car`'s version, calling it on a `sportsCar` instance runs the override. Which implementation runs is decided by the object's actual type at runtime, not by the variable's declared type.)
+
+**Static polymorphism (overloading)** — multiple methods, same name, same class, different signatures. Three ways a signature can differ:
+- number of parameters
+- types of parameters
+- order of parameters
+
+```js
+class Car {
+  drive(spd, dest) { /* ... */ }   // (number, string)
+  drive(spd, dist) { /* ... */ }   // (number, number) — same shape as above, illustrative only; real JS doesn't overload by type
+}
+```
+```java
+class Car {
+    void drive(int spd, String dest) { /* ... */ }
+    void drive(int spd, int dist) { /* ... */ }
+    void drive(String dest, int spd) { /* ... */ }
+}
+Car myCar = new Car();
+myCar.drive("School", 30); // compiler picks drive(String, int) based on argument types/order
+```
+Pitfall: if two overloads' parameter lists are ambiguous or too similar, passing the wrong argument can silently match a *different* overload instead of erroring — always double check which signature you're actually calling.
 
 **Overloading vs overriding**
 
