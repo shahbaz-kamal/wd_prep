@@ -13,14 +13,15 @@ Object-Oriented Programming organizes code around **objects** — bundles of dat
 
 Example: `Car` is a class; `bmw`, `audi` are objects (instances) of it.
 
-```js
+```ts
 class Car {
-  constructor(name) {
-    this.name = name;
-  }
+  name: string;
+  constructor(name: string) { this.name = name; }
 }
 const bmw = new Car("BMW");
 const audi = new Car("Audi");
+console.log(bmw.name, audi.name);
+// Output: BMW Audi
 ```
 
 ```java
@@ -30,6 +31,19 @@ class Car {
 }
 Car bmw = new Car("BMW");
 Car audi = new Car("Audi");
+System.out.println(bmw.name + " " + audi.name);
+// Output: BMW Audi
+```
+
+```csharp
+class Car {
+    public string Name;
+    public Car(string name) { Name = name; }
+}
+var bmw = new Car("BMW");
+var audi = new Car("Audi");
+Console.WriteLine($"{bmw.Name} {audi.Name}");
+// Output: BMW Audi
 ```
 
 ## Four pillars
@@ -37,21 +51,43 @@ Car audi = new Car("Audi");
 ### Encapsulation
 Bundling data + the methods that operate on it into one unit, and hiding internal state behind a controlled interface (getters/setters) instead of exposing raw fields. Real-world analogy: a capsule/pill — contents sealed inside, you interact with the outer shell only. Purpose: protect invariants, control how state changes.
 
-```js
+```ts
 class Employee {
-  #salary; // private field
-  constructor(salary) { this.#salary = salary; }
-  getSalary() { return this.#salary; }
-  setSalary(s) { if (s > 0) this.#salary = s; }
+  #salary: number; // private field
+  constructor(salary: number) { this.#salary = salary; }
+  getSalary(): number { return this.#salary; }
+  setSalary(s: number): void { if (s > 0) this.#salary = s; }
 }
+const emp = new Employee(50000);
+emp.setSalary(60000);
+console.log(emp.getSalary());
+// Output: 60000
 ```
 
 ```java
 class Employee {
     private double salary;
+    Employee(double salary) { this.salary = salary; }
     public double getSalary() { return salary; }
     public void setSalary(double s) { if (s > 0) salary = s; }
 }
+Employee emp = new Employee(50000);
+emp.setSalary(60000);
+System.out.println(emp.getSalary());
+// Output: 60000.0
+```
+
+```csharp
+class Employee {
+    private double salary;
+    public Employee(double salary) { this.salary = salary; }
+    public double GetSalary() => salary;
+    public void SetSalary(double s) { if (s > 0) salary = s; }
+}
+var emp = new Employee(50000);
+emp.SetSalary(60000);
+Console.WriteLine(emp.GetSalary());
+// Output: 60000
 ```
 
 Getter/setter naming: **getting methods** retrieve information (`getSalary()`), **setting methods** change it (`setSalary()`). Two things fall out of this:
@@ -63,13 +99,15 @@ Getter/setter naming: **getting methods** retrieve information (`getSalary()`), 
 ### Abstraction
 Hiding implementation details, exposing only the essential operations. Real-world analogy: an ATM or coffee machine — you press a button, you don't see the internal circuitry. Achieved via abstract classes / interfaces.
 
-```js
-class PaymentMethod {
-  pay(amount) { throw new Error("not implemented"); } // abstract-ish contract
+```ts
+abstract class PaymentMethod {
+  abstract pay(amount: number): void;
 }
 class CardPayment extends PaymentMethod {
-  pay(amount) { console.log(`Charged $${amount} to card`); }
+  pay(amount: number): void { console.log(`Charged $${amount} to card`); }
 }
+new CardPayment().pay(50);
+// Output: Charged $50 to card
 ```
 
 ```java
@@ -77,8 +115,21 @@ abstract class PaymentMethod {
     abstract void pay(double amount);
 }
 class CardPayment extends PaymentMethod {
-    void pay(double amount) { System.out.println("Charged " + amount); }
+    void pay(double amount) { System.out.println("Charged " + amount + " to card"); }
 }
+new CardPayment().pay(50);
+// Output: Charged 50.0 to card
+```
+
+```csharp
+abstract class PaymentMethod {
+    public abstract void Pay(double amount);
+}
+class CardPayment : PaymentMethod {
+    public override void Pay(double amount) => Console.WriteLine($"Charged {amount} to card");
+}
+new CardPayment().Pay(50);
+// Output: Charged 50 to card
 ```
 
 **Interface vs implementation** — the *interface* is how classes talk to each other (the methods each one exposes); the *implementation* is how those methods are actually coded, and it should stay hidden. A chess `King` and `Knight` have completely different internal move logic, but both expose a `move()` method — same interface shape, different implementation underneath.
@@ -90,13 +141,15 @@ One class (child/derived, a.k.a. **subclass**) acquires the properties and metho
 
 A hierarchy isn't limited to one level — it's common to see several layers stacked (e.g. `Item` → `Weapon`/`Tool` → `Sword`/`Club` → more specific subtypes), forming a whole web of superclass/subclass relationships, not just a single parent-child pair.
 
-```js
+```ts
 class Animal {
-  speak() { return "..."; }
+  speak(): string { return "..."; }
 }
 class Dog extends Animal {
-  speak() { return "Bark"; }
+  speak(): string { return "Bark"; }
 }
+console.log(new Dog().speak());
+// Output: Bark
 ```
 
 ```java
@@ -106,6 +159,19 @@ class Animal {
 class Dog extends Animal {
     String speak() { return "Bark"; }
 }
+System.out.println(new Dog().speak());
+// Output: Bark
+```
+
+```csharp
+class Animal {
+    public virtual string Speak() => "...";
+}
+class Dog : Animal {
+    public override string Speak() => "Bark";
+}
+Console.WriteLine(new Dog().Speak());
+// Output: Bark
 ```
 
 **Access modifiers** — control which classes can reach a given member:
@@ -121,15 +187,34 @@ Example on a `Food` → `Fruit`/`Vegetables` → `Apple`/`Orange`/`Broccoli` hie
 ### Polymorphism
 "Many forms" — the same method/interface produces different behavior depending on the object invoking it. Two flavors: compile-time (overloading) and runtime (overriding). Real-world analogy: calling `speak()` on different animals — `Dog` barks, `Cat` meows, `Cow` moos — same call, different result per object.
 
-```js
-[new Dog(), new Cat(), new Cow()].forEach(a => console.log(a.speak()));
-// Bark, Meow, Moo — resolved per-object at runtime
+```ts
+const animals: Animal[] = [new Dog(), new Cat(), new Cow()];
+animals.forEach(a => console.log(a.speak()));
+// Output:
+// Bark
+// Meow
+// Moo
+// — resolved per-object at runtime
 ```
 
 ```java
 Animal[] animals = { new Dog(), new Cat(), new Cow() };
 for (Animal a : animals) System.out.println(a.speak());
-// Bark, Meow, Moo — dynamic dispatch
+// Output:
+// Bark
+// Meow
+// Moo
+// — dynamic dispatch
+```
+
+```csharp
+Animal[] animals = { new Dog(), new Cat(), new Cow() };
+foreach (var a in animals) Console.WriteLine(a.Speak());
+// Output:
+// Bark
+// Meow
+// Moo
+// — dynamic dispatch
 ```
 
 (Same idea, classic car flavor: `Car.drive()` and a `sportsCar extends Car` that overrides `drive()` — calling `.drive()` on a `Car` instance runs `Car`'s version, calling it on a `sportsCar` instance runs the override. Which implementation runs is decided by the object's actual type at runtime, not by the variable's declared type.)
@@ -139,20 +224,38 @@ for (Animal a : animals) System.out.println(a.speak());
 - types of parameters
 - order of parameters
 
-```js
+TS/JS have no real runtime overloading — only one function body ever exists, so "overloads" are just declared signatures dispatching to shared code via `typeof`/argument checks. C# and Java compile each overload to a genuinely separate method, picked at compile time by the argument types.
+
+```ts
 class Car {
-  drive(spd, dest) { /* ... */ }   // (number, string)
-  drive(spd, dist) { /* ... */ }   // (number, number) — same shape as above, illustrative only; real JS doesn't overload by type
+  drive(spd: number, dest: string): void;
+  drive(spd: number, dist: number): void;
+  drive(spd: number, arg: string | number): void {
+    console.log(typeof arg === "string" ? `Driving to ${arg} at ${spd}` : `Driving ${arg}km at ${spd}`);
+  }
 }
+new Car().drive(30, "School");
+// Output: Driving to School at 30
 ```
+
 ```java
 class Car {
-    void drive(int spd, String dest) { /* ... */ }
-    void drive(int spd, int dist) { /* ... */ }
-    void drive(String dest, int spd) { /* ... */ }
+    void drive(int spd, String dest) { System.out.println("Driving to " + dest + " at " + spd); }
+    void drive(int spd, int dist) { System.out.println("Driving " + dist + "km at " + spd); }
 }
 Car myCar = new Car();
-myCar.drive("School", 30); // compiler picks drive(String, int) based on argument types/order
+myCar.drive(30, "School"); // compiler picks drive(int, String) based on argument types
+// Output: Driving to School at 30
+```
+
+```csharp
+class Car {
+    public void Drive(int spd, string dest) => Console.WriteLine($"Driving to {dest} at {spd}");
+    public void Drive(int spd, int dist) => Console.WriteLine($"Driving {dist}km at {spd}");
+}
+var myCar = new Car();
+myCar.Drive(30, "School"); // compiler picks Drive(int, string) based on argument types
+// Output: Driving to School at 30
 ```
 Pitfall: if two overloads' parameter lists are ambiguous or too similar, passing the wrong argument can silently match a *different* overload instead of erroring — always double check which signature you're actually calling.
 
