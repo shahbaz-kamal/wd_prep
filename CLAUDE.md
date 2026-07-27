@@ -18,3 +18,4 @@
 
 - Don't add "WellDev" / "SWE" / employer-identifying terms to filenames or content — user is keeping this repo generic (see prior scrubbing).
 - Don't create new topic files unless asked — enhancing an existing one is the default action when the user says they're studying a topic.
+- When the user shares a reference link for a topic (MCQ bank, article, video, etc.), add it to that topic's `topics/N-name.md` file under a `## Further Practice` (or `## References` if not practice questions) section — don't ask, just add it.

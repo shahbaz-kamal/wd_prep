@@ -154,3 +154,7 @@ for (Animal a : animals) System.out.println(a.speak());
 - **Overhead for simple programs** — unnecessary structure for small scripts.
 - **Design complexity** — class hierarchies need careful upfront planning.
 - **Higher memory use** — many objects cost more than plain data structures/functions.
+
+## Further Practice
+
+- [Sanfoundry — 1000 OOP MCQ Questions & Answers](https://www.sanfoundry.com/1000-object-oriented-programming-oops-questions-answers/)
