@@ -72,6 +72,8 @@ Console.WriteLine(a == b);
 // Output: True
 ```
 
+Why this is Singleton: the private constructor blocks outside `new`; the static `getInstance()`/`GetInstance()` caches and returns the same instance every call — that's the "exactly one, globally shared" shape made concrete.
+
 Gotcha: overused Singleton is disguised global state — it hides a class's real dependencies and makes unit testing harder, since you can't easily swap in a mock instance.
 
 ### Factory Method
@@ -114,6 +116,8 @@ class WindowsDialog : Dialog {
 new WindowsDialog().Render();
 // Output: Rendering with Windows button
 ```
+
+Why this is Factory Method: `Dialog.render()` calls `this.createButton()` without knowing which subclass answers it — the decision of *which* class to instantiate lives in `WindowsDialog`'s override, not in the base class.
 
 Distinguish from Abstract Factory below: Factory Method makes **one** product via subclassing; Abstract Factory makes **families** of related products via composition.
 
@@ -168,6 +172,8 @@ IUIFactory factory = new DarkFactory();
 Console.WriteLine($"{factory.CreateButton().Render()} {factory.CreateCheckbox().Render()}");
 // Output: dark button dark checkbox
 ```
+
+Why this is Abstract Factory: `DarkFactory` produces both a matching button *and* checkbox from one factory — swap to a `LightFactory` and the whole family changes together, never mismatched.
 
 Gotcha: adding a new product type (e.g. a `Slider`) to the family means editing **every** factory implementation — the opposite tradeoff of Factory Method, which makes adding new products easy but doesn't group them into families.
 
@@ -226,6 +232,8 @@ Console.WriteLine($"{pizza.Size} {string.Join(",", pizza.Toppings)}");
 // Output: large cheese,olives
 ```
 
+Why this is Builder: each `.addTopping()`/`.setSize()` call returns `this`, chaining step by step, and only the final `.build()` produces the `Pizza` — no giant constructor call.
+
 ### Prototype
 In short: make a new object by copying an existing one instead of building it from zero.
 
@@ -268,6 +276,8 @@ goblin2.Health = 25;
 Console.WriteLine($"{goblinTemplate.Health} {goblin2.Health}");
 // Output: 30 25
 ```
+
+Why this is Prototype: `.clone()`/`.copy()`/`.Clone()` builds the new `Enemy` by copying fields off `goblinTemplate`, not via a fresh constructor call from scratch.
 
 Gotcha: a naive clone is a **shallow copy** (see 1-oop.md's shallow vs deep copy) — if `Enemy` held a nested mutable object (e.g. an `Inventory`), cloning would share that reference unless deep-cloned too.
 
@@ -322,6 +332,8 @@ printer.Print("Hello");
 // Output: [legacy] Hello
 ```
 
+Why this is Adapter: `PrinterAdapter` implements the new `Printer` interface but internally just calls the legacy `printOld()` — reshaping the interface without touching what the legacy class actually does.
+
 Gotcha: Adapter only reshapes the interface — it never changes what the wrapped class actually does. If the behavior itself needs to change, that's Decorator's job, not Adapter's.
 
 ### Decorator
@@ -368,6 +380,8 @@ ICoffee drink = new MilkDecorator(new SimpleCoffee());
 Console.WriteLine(drink.Cost());
 // Output: 2.5
 ```
+
+Why this is Decorator: `MilkDecorator` implements the same `Coffee` interface as what it wraps, and adds cost on top by delegating to the wrapped instance — stackable at runtime, not baked in via subclassing.
 
 Gotcha: stacking many decorators makes the call chain hard to trace — debugging means stepping through a dozen thin wrapper layers to find where a value actually changed.
 
@@ -425,6 +439,8 @@ new HomeTheaterFacade(new Projector(), new SoundSystem()).WatchMovie();
 // Sound on
 // Enjoy the movie
 ```
+
+Why this is Facade: `watchMovie()` is the one method callers use; it hides that turning on a projector and a sound system are two separate calls underneath.
 
 ### Proxy
 In short: put a stand-in in front of the real object that controls or delays access to it.
@@ -496,6 +512,8 @@ img.Display();
 // Displaying photo.png
 ```
 
+Why this is Proxy: `ImageProxy` implements the same `Image` interface as `RealImage`, but only constructs the real one the first time `.display()` is actually called.
+
 ### Composite
 In short: treat one item and a whole group of items the exact same way in your code.
 
@@ -557,6 +575,8 @@ Console.WriteLine(folder.GetSize());
 // Output: 350
 ```
 
+Why this is Composite: `Folder` and `FileItem` both implement `FileSystemItem`, so `getSize()` is called identically on either — `Folder.getSize()` just recurses into whatever children it holds.
+
 ### Bridge
 In short: keep "what something is" and "how it's actually done" as two separate, swappable pieces.
 
@@ -613,6 +633,8 @@ class Circle : Shape {
 new Circle(new VectorRenderer()).Draw();
 // Output: Drawing circle as vectors
 ```
+
+Why this is Bridge: `Shape` (abstraction) holds a `Renderer` (implementation) via composition, not inheritance — swap renderers without touching `Circle`, or add new shapes without touching renderers.
 
 Gotcha: easy to confuse with Adapter — Adapter is retrofitted after the fact to reconcile two existing incompatible interfaces; Bridge is designed upfront so abstraction and implementation are separate hierarchies from the start.
 
@@ -689,6 +711,8 @@ Console.WriteLine(t1.Type == t2.Type);
 // Output: True
 ```
 
+Why this is Flyweight: `TreeFactory` caches `TreeType` by key, so two trees requesting the same name+texture share the *exact same* object (`t1.type === t2.type` prints true) instead of each `Tree` owning its own copy.
+
 ## Behavioural
 
 ### Observer
@@ -743,6 +767,8 @@ subject.Notify("state changed");
 // Widget B got: state changed
 ```
 
+Why this is Observer: `Subject.notify()` loops over every subscribed callback and invokes them all — the subject never knows or cares what each observer does with the data.
+
 Gotcha: too many observers, or chains where a notify triggers another notify, make it hard to trace what ultimately caused a given update — a common source of hard-to-debug pub/sub systems.
 
 ### Strategy
@@ -790,6 +816,8 @@ class SortContext {
 Console.WriteLine(string.Join(",", new SortContext(new AscendingSort()).Execute(new[]{3,1,2})));
 // Output: 1,2,3
 ```
+
+Why this is Strategy: `SortContext` holds a `SortStrategy` and just calls `.sort()` on it — swap `AscendingSort` for a different strategy class and `SortContext`'s own code never changes.
 
 ### Command
 In short: turn an action into an object, so it can be stored, queued, or undone later.
@@ -855,6 +883,8 @@ cmd.Undo();
 // Light off
 ```
 
+Why this is Command: the light-on action is packaged as a `LightOnCommand` object with `execute()`/`undo()`, so it can be stored, passed around, or reversed instead of calling `light.on()` directly.
+
 ### Iterator
 In short: step through a collection's items one at a time without needing to know how it's stored inside.
 
@@ -902,6 +932,8 @@ foreach (var n in new NumberCollection(new List<int>{10, 20, 30})) Console.Write
 // 20
 // 30
 ```
+
+Why this is Iterator: the `for...of`/`foreach` loop pulls values one at a time through a shared iterator contract, without the caller ever touching the underlying array/list directly.
 
 ### Template Method
 In short: lock down the overall steps of a process, but let subclasses fill in a few of those steps differently.
@@ -964,6 +996,8 @@ new Chess().Play();
 // Chess: white moves first
 // Chess: checkmate
 ```
+
+Why this is Template Method: `play()`/`Play()` is defined once in `Game` and never overridden; only the individual steps (`initialize`, `startPlay`, `endPlay`) are overridden by `Chess` — the overall order can't be changed by a subclass.
 
 ### State
 In short: let an object behave differently depending on what "mode" it's currently in.
@@ -1041,6 +1075,8 @@ new TrafficLight().Change();
 // Now Green
 ```
 
+Why this is State: `TrafficLight.change()` contains no red/green logic itself — it delegates to whichever `LightState` object is currently set, and that object decides what happens next.
+
 ### Chain of Responsibility
 In short: pass a task down a line of handlers until someone who can deal with it takes it.
 
@@ -1109,6 +1145,8 @@ l1.Handle(2);
 // Output: L2 resolved it
 ```
 
+Why this is Chain of Responsibility: `L1Handler.handle()` either resolves the request or forwards it to `next` — the caller just calls `l1.handle()` and never needs to know which handler in the chain actually deals with it.
+
 ### Mediator
 In short: have a bunch of objects talk through one go-between instead of directly to each other.
 
@@ -1175,6 +1213,8 @@ var bob = new User("Bob", room);
 alice.Send("Hi Bob");
 // Output: Bob got from Alice: Hi Bob
 ```
+
+Why this is Mediator: `alice.Send()` never references `bob` directly — it goes through `ChatRoomMediator`, the only object that knows about every `User`.
 
 Gotcha: a mediator that accumulates too much coordination logic becomes a "God object" — the exact many-to-many tangle it was meant to prevent, just centralized in one place instead.
 
@@ -1247,6 +1287,8 @@ Console.WriteLine(editor.GetText());
 // Output: Hello
 ```
 
+Why this is Memento: `Save()` returns an `EditorMemento` whose `Content` is read-only from outside — the editor restores from it later without any external code reading or mutating that state directly.
+
 ## Architectural (often lumped in)
 
 These operate at a coarser grain than the patterns above — they organize a whole app's layers rather than a single class relationship — so the treatment here is lighter (concept + when-to-use, code only where it clarifies rather than requiring a full framework scaffold).
@@ -1279,6 +1321,8 @@ console.log(repo.findById(1));
 
 Swapping `InMemoryUserRepository` for a `SqlUserRepository` later touches nothing that depends on the `UserRepository` interface.
 
+Why this is Repository: calling code only ever touches the `UserRepository` interface's `findById()` — it has no idea the data is an in-memory array here, so switching to a real database later is invisible to callers.
+
 ### Dependency Injection
 In short: hand a class what it needs from outside, instead of letting it create those things itself.
 
@@ -1296,3 +1340,5 @@ new UserService(new MySQLDatabase()).register("Alice");
 ```
 
 `UserService` never mentions `MySQLDatabase` by name in its own body — swap in a `PostgresDatabase` or a test mock without touching `UserService` at all.
+
+Why this is Dependency Injection: `UserService`'s constructor receives an already-built `Database` instance instead of constructing one (`new MySQLDatabase()`) internally — the dependency comes from outside, not from within the class.
