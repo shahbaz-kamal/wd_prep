@@ -23,7 +23,7 @@ The patterns below sort into four rough families, in plain terms:
 ## Creational
 
 ### Singleton
-In short: make sure a class can only ever be created once, so everyone shares that one instance.
+In short: make sure a class can only ever be created once, so everyone shares that one instance. Instead of every part of the app making its own copy, they all call the same getter and get back the identical object. Useful when a second copy would actually cause bugs, not just waste memory.
 
 Ensures exactly one instance of a class exists and gives one global access point to it — needed when having a second instance would cause real problems (e.g. two DB connection pools or two loggers silently diverging in state). Analogy: a country has one government — you don't "instantiate" a second one.
 
@@ -77,7 +77,7 @@ Why this is Singleton: the private constructor blocks outside `new`; the static 
 Gotcha: overused Singleton is disguised global state — it hides a class's real dependencies and makes unit testing harder, since you can't easily swap in a mock instance.
 
 ### Factory Method
-In short: let subclasses decide exactly what object gets created, instead of hardcoding it in one place.
+In short: let subclasses decide exactly what object gets created, instead of hardcoding it in one place. The base class knows a "make a thing" step has to happen, but doesn't hardcode which class that thing is — each subclass fills in that blank its own way. Swap in a new subclass and you get a new kind of object without editing the base class at all.
 
 A base class defines *that* an object gets created, but leaves *which concrete class* to instantiate up to the subclass, via overriding. Analogy: a restaurant chain's central menu says "make a dessert" — each branch decides whether that means cake or ice cream.
 
@@ -122,7 +122,7 @@ Why this is Factory Method: `Dialog.render()` calls `this.createButton()` withou
 Distinguish from Abstract Factory below: Factory Method makes **one** product via subclassing; Abstract Factory makes **families** of related products via composition.
 
 ### Abstract Factory
-In short: create a matching set of related objects together, so you never end up mixing incompatible pieces.
+In short: create a matching set of related objects together, so you never end up mixing incompatible pieces. One factory hands you a whole coordinated bundle — button, checkbox, whatever else — all built to go together. Pick a different factory and every piece in the bundle switches at once, so nothing ever gets left mismatched.
 
 Creates families of related objects that must match each other (e.g. a dark-theme button must pair with a dark-theme checkbox, never a light one) without the caller knowing which family it's using. Analogy: ordering a combo meal — burger+fries+drink all come from the same matched set, you don't mix combos.
 
@@ -178,7 +178,7 @@ Why this is Abstract Factory: `DarkFactory` produces both a matching button *and
 Gotcha: adding a new product type (e.g. a `Slider`) to the family means editing **every** factory implementation — the opposite tradeoff of Factory Method, which makes adding new products easy but doesn't group them into families.
 
 ### Builder
-In short: build a complicated object one step at a time instead of via one giant constructor call.
+In short: build a complicated object one step at a time instead of via one giant constructor call. Each step sets one piece of the object and hands control back so you can chain the next step, and nothing gets built until you say "done." Handy once an object has enough optional parts that cramming them all into one constructor call turns unreadable.
 
 Constructs a complex object step by step instead of via a constructor with many optional args ("telescoping constructor" — unreadable and error-prone past 3-4 params). Analogy: ordering a custom sandwich — built step by step (bread, then filling, then sauce), not specified in one giant order line.
 
@@ -235,7 +235,7 @@ Console.WriteLine($"{pizza.Size} {string.Join(",", pizza.Toppings)}");
 Why this is Builder: each `.addTopping()`/`.setSize()` call returns `this`, chaining step by step, and only the final `.build()` produces the `Pizza` — no giant constructor call.
 
 ### Prototype
-In short: make a new object by copying an existing one instead of building it from zero.
+In short: make a new object by copying an existing one instead of building it from zero. Take an object that's already set up the way you want, clone it, then tweak just the couple of fields that need to differ. Saves you from re-running a whole expensive or fiddly setup process just to get one slightly different variant.
 
 Creates a new object by cloning an existing, already-configured instance instead of building it from scratch. Analogy: photocopying a filled-out form instead of writing a blank one from memory each time.
 
@@ -284,7 +284,7 @@ Gotcha: a naive clone is a **shallow copy** (see 1-oop.md's shallow vs deep copy
 ## Structural
 
 ### Adapter
-In short: make one thing's interface fit what another thing expects, without changing either.
+In short: make one thing's interface fit what another thing expects, without changing either. A thin wrapper sits between the two, translating calls from the shape the caller expects into the shape the old code actually has. Neither side gets rewritten — only the wrapper knows the translation happened.
 
 Converts one interface into another that the caller expects, without changing either side's actual behavior — used when you can't modify a legacy API but need it to match a new interface. Analogy: a physical power-plug adapter — doesn't change what the socket or the plug do, just bridges the shape mismatch.
 
@@ -337,7 +337,7 @@ Why this is Adapter: `PrinterAdapter` implements the new `Printer` interface but
 Gotcha: Adapter only reshapes the interface — it never changes what the wrapped class actually does. If the behavior itself needs to change, that's Decorator's job, not Adapter's.
 
 ### Decorator
-In short: add extra behavior to a single object by wrapping it, without touching its original code.
+In short: add extra behavior to a single object by wrapping it, without touching its original code. Each wrapper implements the same interface as the thing it wraps, does its own bit of extra work, then calls through to the original underneath. Stack several wrappers and you get several add-ons combined, chosen at runtime instead of baked into a subclass.
 
 Adds behavior to an individual object at runtime by wrapping it, avoiding a combinatorial explosion of subclasses (Coffee, Coffee+Milk, Coffee+Sugar, Coffee+Milk+Sugar, ... only gets worse with more options). Analogy: Express/Koa middleware — each layer wraps the request handler, adding behavior before/after, without the core handler knowing.
 
@@ -386,7 +386,7 @@ Why this is Decorator: `MilkDecorator` implements the same `Coffee` interface as
 Gotcha: stacking many decorators makes the call chain hard to trace — debugging means stepping through a dozen thin wrapper layers to find where a value actually changed.
 
 ### Facade
-In short: give people one simple button that hides a complicated set of steps underneath.
+In short: give people one simple button that hides a complicated set of steps underneath. Behind that one method call, several other objects still get set up and called in the right order — the facade just does that wiring for you. Callers get the simple entry point without ever needing to learn the subsystem it's hiding.
 
 Provides one simplified entry point over a complex subsystem with many moving parts and a specific setup order, so callers don't need to learn every part just to get the common result. Analogy: a car's ignition button — one press hides starting the engine, fuel pump, ECU, etc.
 
@@ -443,7 +443,7 @@ new HomeTheaterFacade(new Projector(), new SoundSystem()).WatchMovie();
 Why this is Facade: `watchMovie()` is the one method callers use; it hides that turning on a projector and a sound system are two separate calls underneath.
 
 ### Proxy
-In short: put a stand-in in front of the real object that controls or delays access to it.
+In short: put a stand-in in front of the real object that controls or delays access to it. The stand-in looks exactly like the real thing to whoever's calling it, but it can hold off creating the real object until it's actually needed, check permissions first, or cache an answer. The caller never has to know it's talking to a stand-in at all.
 
 A stand-in object that controls access to a real object — delaying expensive creation until actually needed (lazy loading), checking permissions before delegating, or caching results. Analogy: a receptionist — screens/handles requests before deciding whether to bother the real person inside.
 
@@ -515,7 +515,7 @@ img.Display();
 Why this is Proxy: `ImageProxy` implements the same `Image` interface as `RealImage`, but only constructs the real one the first time `.display()` is actually called.
 
 ### Composite
-In short: treat one item and a whole group of items the exact same way in your code.
+In short: treat one item and a whole group of items the exact same way in your code. A single item and a container full of items both answer to the same method calls, so code that walks the structure never has to ask "is this one thing or a bunch of things?" That single shared interface is what lets a group contain other groups, arbitrarily deep, with no extra logic.
 
 Lets client code treat a single object and a group of objects the same way, so it never has to special-case "is this a leaf or a group?". Analogy: a filesystem tree — a folder's size is just the sum of whatever it contains, file or folder alike.
 
@@ -578,7 +578,7 @@ Console.WriteLine(folder.GetSize());
 Why this is Composite: `Folder` and `FileItem` both implement `FileSystemItem`, so `getSize()` is called identically on either — `Folder.getSize()` just recurses into whatever children it holds.
 
 ### Bridge
-In short: keep "what something is" and "how it's actually done" as two separate, swappable pieces.
+In short: keep "what something is" and "how it's actually done" as two separate, swappable pieces. One side holds a reference to the other instead of inheriting from it, so either side can change independently. Add a new shape or a new rendering method later and it's one new class, not a new combination of every existing class.
 
 Decouples an abstraction from its implementation so both can vary independently — avoids the class explosion of `Shape` types × `Renderer` types (`VectorCircle`, `RasterCircle`, `VectorSquare`, `RasterSquare`, ...) that pure inheritance would cause. Analogy: a TV remote (abstraction) works with any TV brand (implementation) as long as both honor the same connecting interface — no different remote needed per brand.
 
@@ -639,7 +639,7 @@ Why this is Bridge: `Shape` (abstraction) holds a `Renderer` (implementation) vi
 Gotcha: easy to confuse with Adapter — Adapter is retrofitted after the fact to reconcile two existing incompatible interfaces; Bridge is designed upfront so abstraction and implementation are separate hierarchies from the start.
 
 ### Flyweight
-In short: share the data that's identical across many objects, instead of duplicating it in each one.
+In short: share the data that's identical across many objects, instead of duplicating it in each one. A shared cache hands out the same underlying object to anyone who asks for the same shared data, while each instance still keeps its own small unique bits (like position) separately. Matters once you're creating huge numbers of near-identical objects and the duplicated shared data alone would blow up memory.
 
 Shares common, rarely-changing state across many similar objects to cut memory — needed when creating huge numbers of objects that would otherwise each carry their own copy of the same data (e.g. thousands of trees in a rendered forest). Analogy: a print shop keeps one master stencil (shared) and only tracks where each stamped copy goes (unique per-instance data).
 
@@ -716,7 +716,7 @@ Why this is Flyweight: `TreeFactory` caches `TreeType` by key, so two trees requ
 ## Behavioural
 
 ### Observer
-In short: let many things get notified automatically whenever one thing changes.
+In short: let many things get notified automatically whenever one thing changes. Anyone interested signs up ahead of time with a callback; when the change happens, every signed-up callback gets fired, no polling required. The thing broadcasting the change never needs a list of who cares or why.
 
 Notifies many dependents automatically when one object's state changes, without that object needing to know who they are individually. Analogy: a newsletter — the publisher doesn't know subscribers individually, it just broadcasts. Powers event emitters and pub/sub systems.
 
@@ -772,7 +772,7 @@ Why this is Observer: `Subject.notify()` loops over every subscribed callback an
 Gotcha: too many observers, or chains where a notify triggers another notify, make it hard to trace what ultimately caused a given update — a common source of hard-to-debug pub/sub systems.
 
 ### Strategy
-In short: make an algorithm swappable, so you can plug in a different one without rewriting the caller.
+In short: make an algorithm swappable, so you can plug in a different one without rewriting the caller. Each variant of the algorithm lives in its own small class behind a shared interface, and the caller just holds a reference to whichever one it's given. Swapping behavior means handing it a different object, not editing an if/else chain.
 
 Makes an algorithm swappable at runtime by encapsulating each variant behind a common interface, instead of an if/else or switch scattered through the caller. Analogy: a maps app's "fastest" vs "shortest" vs "avoid tolls" mode — same trip, different strategy plugged in. Cross-ref: this is polymorphism (1-oop.md) applied specifically to interchangeable algorithms.
 
@@ -820,7 +820,7 @@ Console.WriteLine(string.Join(",", new SortContext(new AscendingSort()).Execute(
 Why this is Strategy: `SortContext` holds a `SortStrategy` and just calls `.sort()` on it — swap `AscendingSort` for a different strategy class and `SortContext`'s own code never changes.
 
 ### Command
-In short: turn an action into an object, so it can be stored, queued, or undone later.
+In short: turn an action into an object, so it can be stored, queued, or undone later. Instead of calling a method right away, you package "what to do" (and often "how to undo it") into an object first, and run it whenever's convenient. That object can sit in a queue, get logged, get retried, or get reversed, all without the code that created it knowing any of those details.
 
 Encapsulates a request as an object, so it can be queued, logged, undone, or handed off — instead of directly calling a method the moment the action happens. Analogy: a restaurant order slip — the waiter doesn't cook on the spot, the request becomes a ticket that can be queued, handed off, or voided.
 
@@ -886,7 +886,7 @@ cmd.Undo();
 Why this is Command: the light-on action is packaged as a `LightOnCommand` object with `execute()`/`undo()`, so it can be stored, passed around, or reversed instead of calling `light.on()` directly.
 
 ### Iterator
-In short: step through a collection's items one at a time without needing to know how it's stored inside.
+In short: step through a collection's items one at a time without needing to know how it's stored inside. All you get is a "give me the next item" operation, repeated until there's nothing left — the array, tree, or linked list underneath stays hidden. That's exactly what a `for...of`/`foreach` loop is running on under the hood.
 
 Lets client code walk through a collection's elements one by one without knowing (or caring) whether it's backed by an array, linked list, or something else. Analogy: a TV remote's channel-up button — you don't need to know how channels are stored internally, just "next".
 
@@ -936,7 +936,7 @@ foreach (var n in new NumberCollection(new List<int>{10, 20, 30})) Console.Write
 Why this is Iterator: the `for...of`/`foreach` loop pulls values one at a time through a shared iterator contract, without the caller ever touching the underlying array/list directly.
 
 ### Template Method
-In short: lock down the overall steps of a process, but let subclasses fill in a few of those steps differently.
+In short: lock down the overall steps of a process, but let subclasses fill in a few of those steps differently. The base class writes the outer method once — step 1, step 2, step 3, in that fixed order — and subclasses only override the individual steps. Nobody has to copy-paste the whole sequence just to change how one step behaves.
 
 Fixes an algorithm's overall skeleton in a base class, deferring individual steps to subclasses via overriding — avoids copy-pasting the whole algorithm just to change a couple of steps. Analogy: a recipe template — "preheat, cook, serve" is fixed, but what "cook" means differs per dish.
 
@@ -1000,7 +1000,7 @@ new Chess().Play();
 Why this is Template Method: `play()`/`Play()` is defined once in `Game` and never overridden; only the individual steps (`initialize`, `startPlay`, `endPlay`) are overridden by `Chess` — the overall order can't be changed by a subclass.
 
 ### State
-In short: let an object behave differently depending on what "mode" it's currently in.
+In short: let an object behave differently depending on what "mode" it's currently in. Each mode gets its own small class that knows what to do and what mode comes next; the main object just forwards the call to whichever mode-object is currently active. No status flag, no growing if/else checking what state you're in before deciding what to do.
 
 Changes an object's behavior based on internal state by delegating to a state object, avoiding a growing if/else or switch on a status flag as states/transitions multiply. Analogy: a traffic light — what it "does" when it changes depends entirely on which light (state) is currently active.
 
@@ -1078,7 +1078,7 @@ new TrafficLight().Change();
 Why this is State: `TrafficLight.change()` contains no red/green logic itself — it delegates to whichever `LightState` object is currently set, and that object decides what happens next.
 
 ### Chain of Responsibility
-In short: pass a task down a line of handlers until someone who can deal with it takes it.
+In short: pass a task down a line of handlers until someone who can deal with it takes it. Each handler checks if it can deal with the request; if not, it forwards to the next one in line, and so on down the chain. The sender fires off the request once and doesn't need to know — or care — which handler ends up actually processing it.
 
 Passes a request along a chain of handlers until one of them handles it, so the sender doesn't need to know which handler will ultimately deal with it. Analogy: tech support escalation — L1 tries first, passes to L2 if it can't resolve, L2 passes to L3.
 
@@ -1148,7 +1148,7 @@ l1.Handle(2);
 Why this is Chain of Responsibility: `L1Handler.handle()` either resolves the request or forwards it to `next` — the caller just calls `l1.handle()` and never needs to know which handler in the chain actually deals with it.
 
 ### Mediator
-In short: have a bunch of objects talk through one go-between instead of directly to each other.
+In short: have a bunch of objects talk through one go-between instead of directly to each other. Every object only knows about the mediator, never about its peers, and sends messages through it to reach the others. That keeps a many-to-many web of connections from forming — there's one central hub instead of everyone wired to everyone.
 
 Routes communication between many objects through one central coordinator, instead of wiring each object directly to every other one (which creates a tangled many-to-many mess). Analogy: air traffic control — planes don't coordinate directly with each other, they all go through the tower.
 
@@ -1219,7 +1219,7 @@ Why this is Mediator: `alice.Send()` never references `bob` directly — it goes
 Gotcha: a mediator that accumulates too much coordination logic becomes a "God object" — the exact many-to-many tangle it was meant to prevent, just centralized in one place instead.
 
 ### Memento
-In short: save a snapshot of something's state now, so you can restore it later.
+In short: save a snapshot of something's state now, so you can restore it later. The object hands out a snapshot of its own internals on request, and can later be handed that same snapshot back to restore exactly that point in time. Whoever's holding the snapshot in between never gets to peek inside it or edit it — it's just a sealed capsule until it's restored.
 
 Captures and later restores an object's internal state (undo/rollback) without exposing that state's private details to whoever's doing the saving. Analogy: a video game save file — the game can restore your exact progress without you ever seeing the raw save-file bytes.
 
@@ -1294,17 +1294,17 @@ Why this is Memento: `Save()` returns an `EditorMemento` whose `Content` is read
 These operate at a coarser grain than the patterns above — they organize a whole app's layers rather than a single class relationship — so the treatment here is lighter (concept + when-to-use, code only where it clarifies rather than requiring a full framework scaffold).
 
 ### MVC
-In short: keep your data, your display, and your input-handling in three separate boxes.
+In short: keep your data, your display, and your input-handling in three separate boxes. Data lives in the Model, what's on screen lives in the View, and reacting to clicks/input lives in the Controller — none of those three does another's job. Change how something looks without touching how it's stored, or change the data logic without touching the display code.
 
 Splits an app into **Model** (data/logic), **View** (display), **Controller** (input handling), so each can change independently — swap the View (web to mobile) without touching business logic, or change data logic without touching how it's displayed. Analogy: a restaurant — kitchen (Model) prepares food, the table/menu (View) presents it, the waiter (Controller) takes your order and relays it between the two. Flow: input reaches the Controller, which updates the Model, which the View then reflects.
 
 ### MVVM
-In short: like MVC, but the display updates itself automatically whenever the underlying data changes.
+In short: like MVC, but the display updates itself automatically whenever the underlying data changes. The View binds to properties on the ViewModel directly, and a binding framework keeps them in sync — nobody writes code that manually pushes a new value onto the screen. Change a ViewModel property and the visible UI just follows.
 
 Like MVC, but the **View** binds directly to a **ViewModel**'s observable properties (data binding) — no Controller manually pushing updates into the View; the binding framework keeps them in sync automatically. Common in WPF, Angular, Vue, SwiftUI. Analogy: a live spreadsheet formula — change the underlying cell (ViewModel), the display (View) updates itself, nobody manually refreshes it. Cross-ref: this relies on **Observer** under the hood — the View "observes" ViewModel property changes.
 
 ### Repository
-In short: hide exactly where/how data is stored behind one simple "get me this" method.
+In short: hide exactly where/how data is stored behind one simple "get me this" method. Business logic calls something like `findById()` and gets an answer back, with zero awareness of whether that pulled from SQL, a REST API, or an array in memory. Swap the storage mechanism later and every caller of the repository keeps working unchanged.
 
 An abstraction layer between business logic and data access, so the rest of the app depends on a contract like `UserRepository.findById()`, not on whether that's backed by SQL, a REST API, or an in-memory list. Analogy: a librarian — you ask for a book by title, you don't care which shelf, floor, or building it's actually stored in.
 
@@ -1324,7 +1324,7 @@ Swapping `InMemoryUserRepository` for a `SqlUserRepository` later touches nothin
 Why this is Repository: calling code only ever touches the `UserRepository` interface's `findById()` — it has no idea the data is an in-memory array here, so switching to a real database later is invisible to callers.
 
 ### Dependency Injection
-In short: hand a class what it needs from outside, instead of letting it create those things itself.
+In short: hand a class what it needs from outside, instead of letting it create those things itself. The class declares "I need a Database" in its constructor, and whoever creates the class is the one who decides which Database to hand it. That means swapping in a different implementation — or a test mock — never requires touching the class's own code.
 
 Supplies a class's dependencies from outside (constructor/setter/parameter) rather than the class `new`-ing them itself — a concrete form of Inversion of Control, and the practical mechanism behind SOLID's Dependency Inversion (see 1-oop.md's SOLID section). Analogy: a lamp doesn't manufacture its own power plant — power is "injected" from the wall socket, so the same lamp works regardless of where the electricity came from.
 
